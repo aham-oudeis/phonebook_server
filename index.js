@@ -1,38 +1,14 @@
 const express = require("express");
 const morgan = require("morgan");
+const mongoose = require("mongoose");
 const phonebook = express();
-
-const database =
-  "mongodb+srv://here-gagan:<password>@fsopen.rldmv.mongodb.net/?retryWrites=true&w=majority";
+const db = require("./database/mongo.js");
 
 phonebook.use(express.json());
 
 //skipped the exercise on using morgan in more granular way
 phonebook.use(morgan("tiny"));
 phonebook.use(express.static("build"));
-
-const contacts = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: 4,
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
 
 const requestLogger = (request, response, next) => {
   console.log("----------------------");
@@ -79,7 +55,7 @@ phonebook.get("/", (request, response) => {
 
 phonebook.get("/api/persons", (request, response) => {
   console.log("request", request.headers);
-  response.json(contacts);
+  db.getAll().then((contacts) => response.json(contacts));
 });
 
 phonebook.get("/info", (request, response) => {
@@ -92,13 +68,15 @@ phonebook.get("/info", (request, response) => {
 });
 
 phonebook.get("/api/persons/:id", (request, response) => {
-  let id = Number(request.params.id);
-  let requestedContact = contacts.find((contact) => contact.id === id);
+  let id = request.params.id;
 
-  if (requestedContact === undefined) {
-    return response.status(400).send("The requested contact is not available");
-  }
-  response.json(requestedContact);
+  console.log("has entered the get by id endpoint");
+  db.findBy(id)
+    .then((res) => {
+      console.log(res);
+      return response.send("It seems to be working so far");
+    })
+    .catch((err) => console.log("ooops! ran into some weird error"));
 });
 
 phonebook.post("/api/persons", (request, response) => {
