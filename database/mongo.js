@@ -3,11 +3,16 @@ const mongoose = require("mongoose");
 const Contact = require("./schemas/contacts.js");
 
 const url = process.env.MONGODB_URI;
-mongoose.connect(url);
+
+const open = () => {
+  mongoose
+    .connect(url)
+    .then((res) => console.log("connected to mongo"))
+    .catch((err) => console.log("error connecting with mongo: ", err.message));
+};
 
 const getAll = () => {
   return Contact.find({}).then((contacts) => {
-    mongoose.connection.close();
     return contacts;
   });
 };
@@ -18,13 +23,19 @@ const findBy = (id) => {
   return Contact.findById(id)
     .then((contact) => {
       console.log(contact);
-      mongoose.connection.close();
       return contact;
     })
     .catch((err) => console.log("error is ", err));
 };
 
+const close = () => {
+  console.log("closing mongo connection...");
+  mongoose.connection.close();
+};
+
 module.exports = {
+  open,
   getAll,
   findBy,
+  close,
 };

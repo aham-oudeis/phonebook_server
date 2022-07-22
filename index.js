@@ -1,6 +1,5 @@
 const express = require("express");
 const morgan = require("morgan");
-const mongoose = require("mongoose");
 const phonebook = express();
 const db = require("./database/mongo.js");
 
@@ -10,6 +9,7 @@ phonebook.use(express.json());
 phonebook.use(morgan("tiny"));
 phonebook.use(express.static("build"));
 
+/*
 const requestLogger = (request, response, next) => {
   console.log("----------------------");
   console.log("Method: ", request.method);
@@ -19,7 +19,7 @@ const requestLogger = (request, response, next) => {
 
   next();
 };
-
+*/
 const errorHandler = ({ name, number }) => {
   const isInvalid = (number) => {
     return number == "";
@@ -54,17 +54,22 @@ phonebook.get("/", (request, response) => {
 */
 
 phonebook.get("/api/persons", (request, response) => {
-  console.log("request", request.headers);
-  db.getAll().then((contacts) => response.json(contacts));
+  db.open();
+  db.getAll().then((contacts) => {
+    db.close();
+    response.json(contacts);
+  });
 });
 
-phonebook.get("/info", (request, response) => {
+phonebook.get("/info", async (request, response) => {
   console.log("requested info");
-  response.send(
-    `<p>Phonebook has info for ${
-      contacts.length
-    } people</p> <br></br> ${new Date().toLocaleString()}`
-  );
+  await db.open();
+  let all = await db.getAll();
+  let total = all.length;
+  let message = `<p>Phonebook has info for ${total} people</p> <br></br> ${new Date().toLocaleString()}`;
+  await db.close();
+
+  response.send(message);
 });
 
 phonebook.get("/api/persons/:id", (request, response) => {
@@ -76,9 +81,10 @@ phonebook.get("/api/persons/:id", (request, response) => {
       console.log(res);
       return response.send("It seems to be working so far");
     })
-    .catch((err) => console.log("ooops! ran into some weird error"));
+    .catch((err) => console.log("ooops! ran into some error: ", err.message));
 });
 
+/*
 phonebook.post("/api/persons", (request, response) => {
   let { name, number } = request.body;
   let errorObj = errorHandler({ name, Number });
@@ -110,7 +116,7 @@ phonebook.delete("/api/persons/:id", (request, response) => {
 
   return response.send("");
 });
-
+*/
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: "The endpoint is unknown" });
 };
