@@ -4,12 +4,10 @@ const Contact = require("./schemas/contacts.js");
 
 const url = process.env.MONGODB_URI;
 
-const open = () => {
-  mongoose
-    .connect(url)
-    .then((res) => console.log("connected to mongo"))
-    .catch((err) => console.log("error connecting with mongo: ", err.message));
-};
+mongoose
+  .connect(url)
+  .then((res) => console.log("connected to mongo"))
+  .catch((err) => console.log("error connecting with mongo: ", err.message));
 
 const getAll = () => {
   return Contact.find({}).then((contacts) => {
@@ -19,23 +17,31 @@ const getAll = () => {
 
 const findBy = (id) => {
   console.log("requested id", id);
-  console.log("contact has findbyid Method", Contact.findById);
-  return Contact.findById(id)
-    .then((contact) => {
-      console.log(contact);
-      return contact;
-    })
-    .catch((err) => console.log("error is ", err));
+  return Contact.findById(id).then((contact) => {
+    console.log(contact);
+    return contact;
+  });
 };
 
+const add = (obj) => {
+  console.log("adding obj to the database");
+
+  let newContact = new Contact(obj);
+  return newContact.save();
+};
+
+const remove = (id) => {
+  return Contact.findByIdAndDelete(id);
+};
 const close = () => {
   console.log("closing mongo connection...");
   mongoose.connection.close();
 };
 
 module.exports = {
-  open,
+  add,
   getAll,
   findBy,
+  remove,
   close,
 };

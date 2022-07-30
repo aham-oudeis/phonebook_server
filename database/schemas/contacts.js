@@ -1,8 +1,16 @@
 const mongoose = require("mongoose");
 
 const contactSchema = new mongoose.Schema({
-  name: String,
-  number: String,
+  name: {
+    type: String,
+    minLength: 1,
+    required: true,
+  },
+  number: {
+    type: String,
+    required: true,
+    minLength: 5,
+  },
 });
 
 contactSchema.set("toJSON", {
